@@ -377,6 +377,7 @@ async def edit_order_callback_field(callback: CallbackQuery, state: FSMContext):
         reply_markup=order_edit_confirm_keyboard,
         parse_mode="Markdown",
     )
+    await callback.answer()
     await state.set_state(OrderEdit.confirm_edit)
 
 
@@ -417,15 +418,18 @@ async def process_edit_photo(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(ADMIN_MESSAGES["add_photo"])
             await state.update_data(photos=[])
             await state.set_state(OrderEdit.add_photo)
+            await callback.answer()
         case "delete_photo":
             await callback.message.edit_text(
                 ADMIN_MESSAGES["delete_photo"], reply_markup=delete_photo_keyboard
             )
             await state.set_state(OrderEdit.delete_photo)
+            await callback.answer()
         case _:
             await callback.message.edit_text(
                 ADMIN_MESSAGES["empty_photo_command"], reply_markup=photo_edit_keyboard
             )
+            await callback.answer()
             return
 
 
