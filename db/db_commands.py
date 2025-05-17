@@ -4,7 +4,7 @@ from sqlalchemy import select, exists
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from db.database import get_db_session
-from db.models import Admin, AdminRights, User, Order
+from db.models import Admin, AdminRights, User, Order, Photo
 
 from utils.exceptions import UserExists, NotSuchUser, OrderExists, OrderDoesNotExists
 
@@ -337,4 +337,68 @@ async def edit_order_db(
 
         except SQLAlchemyError as e:
             logger.error(e)
+            return False
+
+
+async def get_order_photo(
+    order_id: int,
+):
+    async with get_db_session() as session:
+        try:
+            result = await session.execute(
+                select(Photo).where(Photo.order_id == order_id)
+            )
+            photo = result.scalar_one_or_none()
+            if not photo:
+                raise OrderDoesNotExists
+            return photo.photos_list
+        except SQLAlchemyError as e:
+            logger.error(e)
+            print(e)
+            return False
+
+
+async def save_edit_order_photo(
+    order_id: int,
+    photo_list: list,
+):
+    async with get_db_session() as session:
+        try:
+            result = await session.execute(
+                select(Photo).where(Photo.order_id == order_id)
+            )
+            photo = result.scalar_one_or_none()
+            if not photo:
+                new_photo = Photo(order_id=order_id, photos_list=photo_list)
+                session.add(new_photo)
+                await session.commit()
+                await session.refresh(new_photo)
+                return True
+            else:
+                photo.photos_list = photo_list
+                await session.commit()
+                await session.refresh(photo)
+                return True
+        except SQLAlchemyError as e:
+            logger.error(e)
+            print(e)
+            return False
+
+
+async def delete_order_photo(order_id: int):
+    async with get_db_session() as session:
+        try:
+            result = await session.execute(
+                select(Photo).where(Photo.order_id == order_id)
+            )
+            photo = result.scalar_one_or_none()
+            if not photo:
+                raise OrderDoesNotExists
+            await session.delete(photo)
+            await session.commit()
+            logger.info(f"delete order photo - {order_id}")
+            return True
+        except SQLAlchemyError as e:
+            logger.error(e)
+            await session.rollback()
             return False

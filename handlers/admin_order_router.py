@@ -29,6 +29,7 @@ async def start_admin_panel(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is not None:
         await state.clear()
+        await state.set_state(None)
         logger.info(LOGGER["clear_state"].format(current_state=current_state))
     await message.answer(ADMIN_MESSAGES["welcome"], reply_markup=ReplyKeyboardRemove())
     await message.answer(ADMIN_MESSAGES["start"], reply_markup=start_admin_keyboard)

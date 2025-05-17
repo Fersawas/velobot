@@ -308,3 +308,30 @@ delete_photo = InlineKeyboardButton(
 photo_edit_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[[new_photo_add, delete_photo], [cancel_order_button]]
 )
+
+save_photo = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["photo_yes"], callback_data="save_photo_yes"
+)
+
+not_save_photo = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["photo_no"], callback_data="save_photo_no"
+)
+
+
+photo_save_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[save_photo, not_save_photo], [cancel_order_button]]
+)
+
+# delete photo
+
+delete_photo_yes = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["photo_yes"], callback_data="delete_photo_yes"
+)
+
+delete_photo_no = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["photo_no"], callback_data="delete_photo_no"
+)
+
+delete_photo_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[delete_photo_yes, delete_photo_no], [cancel_order_button]]
+)

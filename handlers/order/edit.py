@@ -1,9 +1,10 @@
 import logging
+import asyncio
 from pprint import pprint
 
 from aiogram import Router, F
 
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 
 from keyboards.order_keyboards import (
@@ -13,6 +14,8 @@ from keyboards.order_keyboards import (
     order_paid_edit_keyboard,
     order_edit_confirm_keyboard,
     photo_edit_keyboard,
+    photo_save_keyboard,
+    delete_photo_keyboard,
     get_msater_msg_buttons,
     get_order_msg_buttons,
 )
@@ -23,6 +26,9 @@ from db.db_commands import (
     admin_retrieve,
     get_order_by_master,
     edit_order_db,
+    get_order_photo,
+    save_edit_order_photo,
+    delete_order_photo,
 )
 from db.models import Order
 
@@ -183,7 +189,6 @@ async def process_edit_field(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(ADMIN_MESSAGES["new_phone"])
             await state.set_state(OrderEdit.edit_field)
         case "master":
-            print("start master")
             admins = await admin_list()
             if not admins:
                 await callback.message.answer(
@@ -195,16 +200,21 @@ async def process_edit_field(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(
                 masters_message, reply_markup=keyboard, parse_mode="Markdown"
             )
-            print("set state")
             await state.set_state(OrderEdit.callback_edit_field)
             await callback.answer()
         case "comment":
             await callback.message.edit_text(ADMIN_MESSAGES["new_comment"])
             await state.set_state(OrderEdit.edit_field)
         case "photo":
-            # photo show
-            # await db show photos
-            await callback.message.edit_text(
+            data = await state.get_data()
+            order = data.get("order")
+            try:
+                photos = await get_order_photo(order.id)
+                media = [InputMediaPhoto(media=photo) for photo in photos]
+                await callback.message.answer_media_group(media=media)
+            except OrderDoesNotExists as e:
+                await callback.message.answer(ADMIN_MESSAGES["no_photos"])
+            await callback.message.answer(
                 ADMIN_MESSAGES["photo_start"], reply_markup=photo_edit_keyboard
             )
             await state.set_state(OrderEdit.photo_edit)
@@ -396,4 +406,102 @@ async def process_re_edit_order(callback: CallbackQuery, state: FSMContext):
         parse_mode="Markdown",
     )
     await state.set_state(OrderEdit.get_order)
+    await callback.answer()
+
+
+@router.callback_query(OrderEdit.photo_edit)
+async def process_edit_photo(callback: CallbackQuery, state: FSMContext):
+    data = callback.data.strip()
+    match data:
+        case "new_photo_add":
+            await callback.message.edit_text(ADMIN_MESSAGES["add_photo"])
+            await state.update_data(photos=[])
+            await state.set_state(OrderEdit.add_photo)
+        case "delete_photo":
+            await callback.message.edit_text(
+                ADMIN_MESSAGES["delete_photo"], reply_markup=delete_photo_keyboard
+            )
+            await state.set_state(OrderEdit.delete_photo)
+        case _:
+            await callback.message.edit_text(
+                ADMIN_MESSAGES["empty_photo_command"], reply_markup=photo_edit_keyboard
+            )
+            return
+
+
+@router.message(F.photo | F.media_group_id, OrderEdit.add_photo)
+async def process_add_photo(
+    message: Message, state: FSMContext, album: list[Message] = None
+):
+    data = await state.get_data()
+    photo_list = data.get("photos")
+    if album:
+        for photo_elem in album:
+            photo_list.append(photo_elem.photo[-1].file_id)
+    else:
+        photo_list.append(message.photo[-1].file_id)
+    await message.answer(ADMIN_MESSAGES["save_photo"], reply_markup=photo_save_keyboard)
+    await state.set_state(OrderEdit.confirm_photo)
+
+
+@router.callback_query(OrderEdit.confirm_photo)
+async def confirm_photo(callback: CallbackQuery, state: FSMContext):
+    callback_data = callback.data.strip()
+    data = await state.get_data()
+    order = data.get("order")
+    photo_list = data.get("photos")
+    match callback_data:
+        case "save_photo_yes":
+            success = await save_edit_order_photo(
+                order_id=order.id, photo_list=photo_list
+            )
+            if not success:
+                await callback.message.edit_text(
+                    ADMIN_MESSAGES["photo_error"], reply_markup=back_to_order_keyboard
+                )
+                await callback.answer()
+                return
+            await callback.message.edit_text(
+                ADMIN_MESSAGES["photo_success"], reply_markup=back_to_order_keyboard
+            )
+            await callback.answer()
+            await state.clear()
+        case "save_photo_no":
+            await callback.message.edit_text(
+                ADMIN_MESSAGES["add_photo"], reply_markup=back_to_order_keyboard
+            )
+            await state.set_state(OrderEdit.add_photo)
+            await callback.answer()
+
+
+@router.callback_query(OrderEdit.delete_photo)
+async def process_delete_photo(callback: CallbackQuery, state: FSMContext):
+    callback_data = callback.data.strip()
+    data = await state.get_data()
+    order = data.get("order")
+    match callback_data:
+        case "delete_photo_yes":
+            try:
+                success = await delete_order_photo(order_id=order.id)
+                if not success:
+                    await callback.message.edit_text(
+                        ADMIN_MESSAGES["photo_error"],
+                        reply_markup=back_to_order_keyboard,
+                    )
+
+                updated_order = await get_order_by_id(order.id)
+                await state.update_data(order=updated_order)
+                await callback.message.edit_text(
+                    ADMIN_MESSAGES["delete_success"],
+                    reply_markup=back_to_order_keyboard,
+                )
+            except OrderDoesNotExists as e:
+                await callback.message.edit_text(
+                    ADMIN_MESSAGES["empty_delete"], reply_markup=back_to_order_keyboard
+                )
+        case "delete_photo_no":
+            await callback.message.answer(
+                ADMIN_MESSAGES["photo_start"], reply_markup=photo_edit_keyboard
+            )
+            await state.set_state(OrderEdit.photo_edit)
     await callback.answer()

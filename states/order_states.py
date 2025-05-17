@@ -35,4 +35,8 @@ class OrderEdit(StatesGroup):
     get_master_order = State()
     order_select = State()
     confirm_edit = State()
+
     photo_edit = State()
+    add_photo = State()
+    delete_photo = State()
+    confirm_photo = State()

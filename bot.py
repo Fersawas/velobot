@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from handlers.client_router import router as cl_router
 from handlers.admin_order_router import router as ad_router
+from middlewares.media_group_middleware import MediaGroupMiddleware
 
 from utils.logger import setup_logger
 
@@ -21,6 +22,7 @@ async def main(TOKEN):
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(cl_router)
     dp.include_router(ad_router)
+    dp.message.middleware(MediaGroupMiddleware())
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
