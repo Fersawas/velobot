@@ -256,7 +256,7 @@ order_edit_comment = InlineKeyboardButton(
 )
 
 order_edit_photo = InlineKeyboardButton(
-    text=ADMIN_BUTTONS["order_edit_photo"], callback_data="edit_photo"
+    text=ADMIN_BUTTONS["order_edit_photo"], callback_data="order_edit_photo"
 )
 
 order_edit_keyboard = InlineKeyboardMarkup(
@@ -293,4 +293,18 @@ order_re_edit = InlineKeyboardButton(
 
 order_edit_confirm_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[[order_edit_confirm, order_re_edit, cancel_order_button]]
+)
+
+# photo edit keyboard
+
+new_photo_add = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["new_photo"], callback_data="new_photo_add"
+)
+
+delete_photo = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["delete_photo"], callback_data="delete_photo"
+)
+
+photo_edit_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[new_photo_add, delete_photo], [cancel_order_button]]
 )

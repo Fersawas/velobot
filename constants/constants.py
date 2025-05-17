@@ -172,6 +172,8 @@ ADMIN_MESSAGES = {
     "empty_edited_field": "Введите значение заново",
     "edit_order_error": "Что-то пошло не так",
     "edit_order_success": "✅ Заказ изменен",
+    # photo edit
+    "photo_start": "Фотографии заказа",
 }
 ADMIN_BUTTONS = {
     "add_admin": "🔐",
@@ -206,6 +208,9 @@ ADMIN_BUTTONS = {
     "find_order_id": "📌",
     "find_master": "🧑‍🔧",
     "order_edit_photo": "📸 Фото заказа",
+    # photo edit
+    "new_photo": "📸 обновить фото",
+    "delete_photo": "🗑️ удалить фото",
 }
 
 

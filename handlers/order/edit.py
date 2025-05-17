@@ -12,6 +12,7 @@ from keyboards.order_keyboards import (
     order_edit_keyboard,
     order_paid_edit_keyboard,
     order_edit_confirm_keyboard,
+    photo_edit_keyboard,
     get_msater_msg_buttons,
     get_order_msg_buttons,
 )
@@ -200,6 +201,13 @@ async def process_edit_field(callback: CallbackQuery, state: FSMContext):
         case "comment":
             await callback.message.edit_text(ADMIN_MESSAGES["new_comment"])
             await state.set_state(OrderEdit.edit_field)
+        case "photo":
+            # photo show
+            # await db show photos
+            await callback.message.edit_text(
+                ADMIN_MESSAGES["photo_start"], reply_markup=photo_edit_keyboard
+            )
+            await state.set_state(OrderEdit.photo_edit)
         case _:
             pass
     await callback.answer()

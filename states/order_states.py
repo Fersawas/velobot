@@ -28,16 +28,6 @@ class OrderEdit(StatesGroup):
     search_master = State()
     search_order_id = State()
 
-    title_edit = State()
-    description_edit = State()
-    model_type_edit = State()
-    price_estimate_edit = State()
-    is_paid_edit = State()
-    fullname_edit = State()
-    phone_edit = State()
-    master_edit = State()
-    comment_edit = State()
-
     get_order = State()
     edit_field = State()
     callback_edit_field = State()
@@ -45,3 +35,4 @@ class OrderEdit(StatesGroup):
     get_master_order = State()
     order_select = State()
     confirm_edit = State()
+    photo_edit = State()
