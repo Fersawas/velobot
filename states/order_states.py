@@ -40,3 +40,10 @@ class OrderEdit(StatesGroup):
     add_photo = State()
     delete_photo = State()
     confirm_photo = State()
+
+
+class OrderSend(StatesGroup):
+    get_orders = State()
+    select_order = State()
+
+    confirm_send = State()

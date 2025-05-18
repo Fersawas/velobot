@@ -1,8 +1,8 @@
 import logging
 
-from sqlalchemy import select, exists
+from sqlalchemy import select, exists, and_
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased
 from db.database import get_db_session
 from db.models import Admin, AdminRights, User, Order, Photo
 
@@ -37,6 +37,7 @@ async def admin_rights_check(username: str):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -99,6 +100,7 @@ async def admin_remove(admin_id: int):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -111,6 +113,7 @@ async def admin_list():
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -123,6 +126,7 @@ async def list_admin_names():
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -138,6 +142,7 @@ async def admin_retrieve(admin_id: int):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -156,6 +161,7 @@ async def admin_edit(admin_id: int, new_phone: str, new_username: str):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -182,6 +188,7 @@ async def user_create(
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -197,6 +204,7 @@ async def user_phone_get(user_id: int):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -212,6 +220,7 @@ async def user_phone_update(user_id: int, phone: str):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -224,6 +233,7 @@ async def order_get_for_client(phone: str):
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -272,6 +282,7 @@ async def order_create(
         except SQLAlchemyError as e:
             logger.error(e)
             print(e)
+            await session.rollback()
             return False
 
 
@@ -292,6 +303,7 @@ async def get_order_by_id(order_id: int):
         except SQLAlchemyError as e:
             print(e)
             logger.error(e)
+            await session.rollback()
             return False
 
 
@@ -300,7 +312,7 @@ async def get_order_by_master(master_id: int):
         try:
             result = await session.execute(
                 select(Order)
-                .where(Order.master_id == master_id)
+                .where(and_(Order.master_id == master_id, Order.status == "В очереди"))
                 .options(joinedload(Order.master))
             )
             orders = result.scalars().all()
@@ -308,6 +320,7 @@ async def get_order_by_master(master_id: int):
         except SQLAlchemyError as e:
             print(e)
             logger.error(e)
+            await session.rollback()
             return False
 
 
@@ -337,6 +350,76 @@ async def edit_order_db(
 
         except SQLAlchemyError as e:
             logger.error(e)
+            await session.rollback()
+            return False
+
+
+async def get_orders_to_send():
+    async with get_db_session() as session:
+        try:
+            result = await session.execute(
+                select(Order)
+                .where(Order.status == "В очереди")
+                .options(joinedload(Order.photos, innerjoin=True))
+                .options(joinedload(Order.master))
+            )
+            orders = result.unique().scalars().all()
+            return orders
+        except SQLAlchemyError as e:
+            logger.error(e)
+            print(e)
+            await session.rollback()
+            return False
+
+
+async def get_order_with_photos(order_id: int):
+    async with get_db_session() as session:
+        try:
+            user = aliased(User)
+            result = await session.execute(
+                select(Order)
+                .add_columns(user.user_id)
+                .where(Order.id == order_id)
+                .options(joinedload(Order.photos, innerjoin=True))
+                .options(joinedload(Order.master))
+                .join(user, user.phone == Order.phone)
+            )
+            row = result.first()
+            order, user_id = row
+            order.user_id = user_id
+            return order
+        except SQLAlchemyError as e:
+            logger.error(e)
+            print(e)
+            await session.rollback()
+            return False
+
+
+async def update_order_status(order_id: int):
+    async with get_db_session() as session:
+        try:
+            user = aliased(User)
+            result = await session.execute(
+                select(Order)
+                .add_columns(user.user_id)
+                .where(Order.id == order_id)
+                .options(joinedload(Order.photos, innerjoin=True))
+                .options(joinedload(Order.master))
+                .join(user, user.phone == Order.phone)
+            )
+            row = result.first()
+            order, user_id = row
+            order.status = "Готов к выдаче"
+            session.add(order)
+            await session.commit()
+            await session.refresh(order)
+
+            order.user_id = user_id
+            return order
+        except SQLAlchemyError as e:
+            logger.error(e)
+            print(e)
+            await session.rollback()
             return False
 
 

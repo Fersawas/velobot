@@ -17,8 +17,16 @@ find_order = InlineKeyboardButton(
     text=ADMIN_BUTTONS["find_order"], callback_data="find_order"
 )
 
+send_order = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["send_order"], callback_data="send_order"
+)
+
 start_order_keyboard = InlineKeyboardMarkup(
-    inline_keyboard=[[create_order, edit_order, find_order], [admin_cancel]]
+    inline_keyboard=[
+        [create_order, edit_order, find_order],
+        [send_order],
+        [admin_cancel],
+    ]
 )
 
 cancel_order_button = InlineKeyboardButton(
@@ -334,4 +342,19 @@ delete_photo_no = InlineKeyboardButton(
 
 delete_photo_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[[delete_photo_yes, delete_photo_no], [cancel_order_button]]
+)
+
+# send orders
+
+send_order_yes = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["send_order_yes"], callback_data="send_order_yes"
+)
+
+send_order_no = InlineKeyboardButton(
+    text=ADMIN_BUTTONS["send_order_no"], callback_data="send_order_no"
+)
+
+
+send_order_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[send_order_yes, send_order_no], [cancel_order_button]]
 )

@@ -8,11 +8,12 @@ from keyboards.order_keyboards import start_order_keyboard
 
 from handlers.order.creation import router as creation_router
 from handlers.order.edit import router as edit_router
+from handlers.order.send import router as send_router
 from constants.constants import ADMIN_MESSAGES, LOGGER
 
 
 router = Router()
-router.include_routers(creation_router, edit_router)
+router.include_routers(creation_router, edit_router, send_router)
 logger = logging.getLogger(__name__)
 
 
