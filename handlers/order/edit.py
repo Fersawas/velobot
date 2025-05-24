@@ -4,7 +4,7 @@ from pprint import pprint
 
 from aiogram import Router, F
 
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext
 
 from keyboards.order_keyboards import (
@@ -29,10 +29,11 @@ from db.db_commands import (
     get_order_photo,
     save_edit_order_photo,
     delete_order_photo,
+    get_all_orders,
 )
 from db.models import Order
 
-from utils.utils import clear_phone, clear_price
+from utils.utils import clear_phone, clear_price, create_excel_orders
 
 from constants.constants import ADMIN_MESSAGES
 from utils.exceptions import OrderDoesNotExists, WrongNumber
@@ -509,3 +510,21 @@ async def process_delete_photo(callback: CallbackQuery, state: FSMContext):
             )
             await state.set_state(OrderEdit.photo_edit)
     await callback.answer()
+
+
+@router.callback_query(F.data == "download_orders")
+async def download_orders(callback: CallbackQuery, state: FSMContext):
+    orders = await get_all_orders()
+    if not orders:
+        await callback.message.edit_text(
+            ADMIN_MESSAGES["no_orders_to_download"], reply_markup=back_to_order_keyboard
+        )
+        await callback.answer()
+        return
+    file = create_excel_orders(orders)
+    await callback.message.answer_document(
+        FSInputFile(file),
+    )
+    await callback.message.answer(
+        ADMIN_MESSAGES["excel_orders"], reply_markup=back_to_order_keyboard
+    )

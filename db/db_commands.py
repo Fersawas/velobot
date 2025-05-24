@@ -36,7 +36,6 @@ async def admin_rights_check(username: str):
             return admin and admin.rights == AdminRights.ADMIN
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -59,7 +58,6 @@ async def admin_rights_change(username: str, rights: str):
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(e)
-            print(e)
             return False
 
 
@@ -81,7 +79,6 @@ async def admin_create(username: str, phone: str | None):
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(e)
-            print(e)
             return False
 
 
@@ -99,7 +96,6 @@ async def admin_remove(admin_id: int):
                 return False
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -112,7 +108,6 @@ async def admin_list():
             return admins
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -125,7 +120,6 @@ async def list_admin_names():
             return admins_names
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -141,7 +135,6 @@ async def admin_retrieve(admin_id: int):
             return admin
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -160,7 +153,6 @@ async def admin_edit(admin_id: int, new_phone: str, new_username: str):
             return True
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -187,7 +179,6 @@ async def user_create(
             return True
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -203,7 +194,6 @@ async def user_phone_get(user_id: int):
                 return False
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -219,7 +209,6 @@ async def user_phone_update(user_id: int, phone: str):
                 await session.refresh(user)
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -232,7 +221,6 @@ async def order_get_for_client(phone: str):
             return orders
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -281,7 +269,6 @@ async def order_create(
                 return new_order.id
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -301,7 +288,6 @@ async def get_order_by_id(order_id: int):
                 logger.warning(f"{order_id} - does not exists")
                 raise OrderDoesNotExists
         except SQLAlchemyError as e:
-            print(e)
             logger.error(e)
             await session.rollback()
             return False
@@ -318,7 +304,6 @@ async def get_order_by_master(master_id: int):
             orders = result.scalars().all()
             return orders
         except SQLAlchemyError as e:
-            print(e)
             logger.error(e)
             await session.rollback()
             return False
@@ -367,7 +352,6 @@ async def get_orders_to_send():
             return orders
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -390,7 +374,6 @@ async def get_order_with_photos(order_id: int):
             return order
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -418,7 +401,6 @@ async def update_order_status(order_id: int):
             return order
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             await session.rollback()
             return False
 
@@ -437,7 +419,6 @@ async def get_order_photo(
             return photo.photos_list
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             return False
 
 
@@ -464,7 +445,6 @@ async def save_edit_order_photo(
                 return True
         except SQLAlchemyError as e:
             logger.error(e)
-            print(e)
             return False
 
 
@@ -481,6 +461,20 @@ async def delete_order_photo(order_id: int):
             await session.commit()
             logger.info(f"delete order photo - {order_id}")
             return True
+        except SQLAlchemyError as e:
+            logger.error(e)
+            await session.rollback()
+            return False
+
+
+async def get_all_orders():
+    async with get_db_session() as session:
+        try:
+            result = await session.execute(
+                select(Order).options(joinedload(Order.master))
+            )
+            orders = result.unique().scalars().all()
+            return orders
         except SQLAlchemyError as e:
             logger.error(e)
             await session.rollback()

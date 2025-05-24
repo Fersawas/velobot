@@ -1,7 +1,7 @@
 import logging
 
 from aiogram import Router, F
-from aiogram.filters import Command, or_f
+from aiogram.filters import Command, or_f, StateFilter
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
@@ -12,7 +12,7 @@ from keyboards.admin_keyboards import (
     start_admin_keyboard,
 )
 
-from constants.constants import ADMIN_MESSAGES, LOGGER
+from constants.constants import ADMIN_MESSAGES, LOGGER, MESSAGES
 from handlers.admin.creation import router as creation_router
 from handlers.admin.edit import router as edit_router
 from handlers.order.main import router as order_router
@@ -42,3 +42,8 @@ async def back_to_admin(callback: CallbackQuery, state: FSMContext):
         ADMIN_MESSAGES["start"], reply_markup=start_admin_keyboard
     )
     await callback.answer()
+
+
+@router.message(default_state, F.text)
+async def defaul_message_handler(message: Message, state: FSMContext):
+    await message.answer(MESSAGES["unknown_command"])

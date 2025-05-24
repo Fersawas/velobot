@@ -14,7 +14,7 @@ edit_order = InlineKeyboardButton(
 )
 
 find_order = InlineKeyboardButton(
-    text=ADMIN_BUTTONS["find_order"], callback_data="find_order"
+    text=ADMIN_BUTTONS["download_orders"], callback_data="download_orders"
 )
 
 send_order = InlineKeyboardButton(
