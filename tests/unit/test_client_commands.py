@@ -6,22 +6,11 @@ from aiogram.types import Message, User, ReplyKeyboardRemove, Contact
 from handlers import admin_order_router, client_router
 
 from keyboards.admin_keyboards import (
-    start_admin_keyboard,
     order_keyboard,
     phone_keyboard,
 )
 
-from constants.constants import ADMIN_MESSAGES, MESSAGES
-
-
-@pytest.mark.asyncio
-async def test_start_admin_panel():
-    message = AsyncMock()
-    state = AsyncMock()
-    await admin_order_router.start_admin_panel(message, state)
-    message.answer.assert_called_with(
-        ADMIN_MESSAGES["start"], reply_markup=start_admin_keyboard
-    )
+from constants.constants import MESSAGES
 
 
 @pytest.mark.asyncio

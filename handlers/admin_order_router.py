@@ -45,5 +45,5 @@ async def back_to_admin(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(default_state, F.text)
-async def defaul_message_handler(message: Message, state: FSMContext):
+async def default_message_handler(message: Message, state: FSMContext):
     await message.answer(MESSAGES["unknown_command"])
