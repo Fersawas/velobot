@@ -1,0 +1,53 @@
+version: '3.8'
+
+volumes:
+  pg_data:
+  alembic_migrations:
+    driver_opts:
+      type: none
+      device: ./migrations
+      o: bind
+
+
+networks:
+  botnet:
+    driver: bridge
+
+
+services:
+  bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: velobot
+    env_file: 
+      - .env
+    networks:
+      - botnet
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    entrypoint: ["/app/scripts/run-bot.sh"]
+    
+
+  db:
+    image: postgres:16-alpine
+    container_name: velobot_db
+    networks:
+      - botnet
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./migration:/app/migrations
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

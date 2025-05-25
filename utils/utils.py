@@ -1,3 +1,5 @@
+import re
+
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
@@ -8,10 +10,15 @@ from db.db_commands import list_admin_names
 
 
 def clear_phone(phone):
+    pattern = r"7\d{10}"
     phone = "".join([char for char in phone if char.isdigit()])
     if len(phone) < 10:
         raise WrongNumber
-    return phone
+    phone = "7" + phone[1:]
+    clean_phone = re.search(pattern, phone)
+    if not clean_phone:
+        raise WrongNumber
+    return clean_phone.group()
 
 
 def clear_price(price):
