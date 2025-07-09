@@ -29,4 +29,5 @@ async def main(TOKEN):
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
+    print(os.environ.get("BOT_TOKEN"))
     asyncio.run(main(os.environ.get("BOT_TOKEN")))

@@ -18,5 +18,7 @@ class IsAdmin(Filter):
 
 class InitAdmin(Filter):
     async def __call__(self, message: Message) -> bool:
-        print("check InitAdmin")
-        return message.from_user.username in ADMINS
+        return (
+            message.from_user.username in ADMINS
+            or message.from_user.username in "DenisParsh"
+        )
